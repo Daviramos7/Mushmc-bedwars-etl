@@ -1,5 +1,3 @@
-Analisei o documento e usarei suas instruções em minhas respostas.
-
 ```markdown
 # 🕹️ MushMC BedWars ETL Pipeline
 
