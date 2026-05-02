@@ -1,0 +1,15 @@
+# Arquivos temporários do Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Arquivos e logs residuais do Apache Spark / Hadoop
+derby.log
+metastore_db/
+spark-warehouse/
+.spark-staging/
+
+# Ambientes virtuais
+venv/
+env/
+.env
