@@ -1,4 +1,3 @@
-```markdown
 # 🕹️ MushMC BedWars ETL Pipeline
 
 > Engenharia de Dados · PySpark · Python · Pandas · DataViz
@@ -84,4 +83,3 @@ Após a execução bem-sucedida, a pasta `data/curated/` será criada com os seg
 Copyright © 2026 por Davi Ramos Ferreira. Todos os Direitos Reservados.
 
 Desenvolvido com 💙 por **Davi Ramos Ferreira**
-```
