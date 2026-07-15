@@ -1,67 +1,193 @@
 # 🕹️ MushMC BedWars ETL Pipeline
 
-> Engenharia de Dados · PySpark · Python · Pandas · DataViz
+> Pipeline de Engenharia de Dados para transformar logs não estruturados de partidas em tabelas analíticas e visualizações automatizadas.
 
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)]()
-[![Apache Spark](https://img.shields.io/badge/Apache_Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)]()
-[![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)]()
-
----
-
-## 👋 Sobre
-
-Este projeto demonstra a arquitetura e construção de um Pipeline ETL ponta a ponta (End-to-End) para processamento de logs brutos e não estruturados.
-
-O objetivo é ingerir arquivos legados (Client-Side) gerados pelo servidor de BedWars *MushMC* (Minecraft 1.8.9), transformá-los e gerar tabelas analíticas e dashboards visuais de forma totalmente automatizada.
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Apache Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=apachespark&logoColor=white)](https://spark.apache.org/)
+[![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![ETL](https://img.shields.io/badge/Pipeline-ETL-19B5A5?style=for-the-badge&logo=databricks&logoColor=white)](#-arquitetura-do-pipeline)
 
 ---
 
-## 🚀 Stack Principal
+## 📌 Sobre o projeto
 
-`Apache Spark (PySpark)` `Python` `Pandas` `Matplotlib` `Seaborn` `Regex`
+Este projeto implementa um pipeline ETL ponta a ponta para processar logs brutos gerados durante partidas de BedWars no servidor MushMC, em Minecraft 1.8.9.
+
+O pipeline normaliza o encoding dos arquivos, identifica eventos por expressões regulares, separa partidas com Window Functions, estrutura os dados com PySpark e gera automaticamente arquivos analíticos e dashboards.
+
+### O pipeline realiza
+
+- leitura e normalização de logs em Windows-1252;
+- conversão dos arquivos para UTF-8;
+- classificação de eventos com Regex;
+- identificação cronológica das partidas;
+- extração de jogadores, itens, recursos e objetivos;
+- agregações analíticas com PySpark;
+- exportação dos resultados em CSV;
+- geração automatizada de gráficos em PNG.
 
 ---
 
-## 🧠 Desafios de Engenharia Resolvidos
+## 🏗️ Arquitetura do pipeline
 
-- **Resolução de Encoding Legado (Windows-1252):** O sistema fonte gera logs em codificação legada que o Spark corrompe por padrão (UTF-8). Implementou-se um pré-processamento em Python puro para normalizar os dados antes da ingestão na JVM.
-- **Parsing Complexo com Regex:** Motor de expressões regulares para varrer linhas caóticas de chat e categorizar eventos (Economia, PvP, Objetivos), extraindo agressores, vítimas e recursos de forma estruturada.
-- **Particionamento Sequencial de Sessões:** Como o log acumula múltiplas partidas no mesmo arquivo, foram utilizadas **Window Functions** (`monotonically_increasing_id` + cumulative sum) para criar IDs de partição cronológica (`match_id`).
-- **Bypass do Hadoop no Windows:** Para evitar o erro nativo do Spark ao escrever dados (`winutils.exe` / `NullPointerException`) em ambientes locais, a exportação foi delegada ao Pandas, garantindo a gravação limpa do arquivo `.csv` e a geração das imagens (PNG).
-
----
-
-## ▶️ Como Executar e Testar
-
-A lógica analítica do código é universal para qualquer partida de BedWars no servidor MushMC. No entanto, por ser um log Client-Side, o jogo registra ações locais em primeira pessoa (ex: "Você comprou Lã").
-
-Para que o pipeline reconheça o seu personagem, siga as diretrizes abaixo:
-
-**1. Clone o repositório:**
-```bash
-git clone https://github.com/Daviramos7/Mushmc-bedwars-etl.git
+```text
+latest.log
+    │
+    ▼
+Normalização de encoding
+Windows-1252 → UTF-8
+    │
+    ▼
+Ingestão com PySpark
+    │
+    ▼
+Parsing e classificação com Regex
+    │
+    ▼
+Separação de partidas com Window Functions
+    │
+    ▼
+Transformações e agregações analíticas
+    │
+    ├── Eventos da partida
+    ├── Compras e recursos
+    ├── Kills e mortes
+    └── Camas destruídas
+    │
+    ▼
+Pandas + Matplotlib + Seaborn
+    │
+    ▼
+CSV estruturado + dashboards PNG
 ```
 
-**2. Instale as dependências:**
+---
+
+## 📊 Resultados visuais
+
+Os gráficos abaixo são gerados automaticamente a partir dos dados processados pelo pipeline.
+
+### Volume de eventos
+
+<p align="center">
+  <img src="./data/curated/dashboards/02_volume_eventos.png" width="900" alt="Gráfico com o volume de eventos identificados durante uma partida de BedWars" />
+</p>
+
+### Compras e desempenho PvP
+
+<p align="center">
+  <img src="./data/curated/dashboards/01_top_itens.png" width="49%" alt="Gráfico com os itens mais comprados durante a partida" />
+  <img src="./data/curated/dashboards/04_performance_pvp.png" width="49%" alt="Gráfico de desempenho pessoal em eventos PvP" />
+</p>
+
+### Outros resultados gerados
+
+- [jogadores com mais kills](./data/curated/dashboards/03_top_killers.png);
+- [camas destruídas por time](./data/curated/dashboards/05_camas_destruidas.png);
+- [volume de eventos identificados](./data/curated/dashboards/02_volume_eventos.png);
+- [itens mais comprados](./data/curated/dashboards/01_top_itens.png).
+
+---
+
+## 🧠 Desafios de engenharia resolvidos
+
+### Encoding legado
+
+Os logs de origem utilizam Windows-1252, enquanto o Spark espera UTF-8. O pipeline realiza uma etapa de normalização em Python antes da ingestão na JVM, evitando caracteres corrompidos.
+
+### Parsing de dados não estruturados
+
+Expressões regulares identificam e categorizam mensagens de economia, PvP, objetivos e sistema, extraindo os campos necessários para a análise.
+
+### Separação cronológica das partidas
+
+Como um mesmo arquivo pode acumular várias partidas, o pipeline utiliza Window Functions e soma cumulativa para criar o campo `match_id`.
+
+### Compatibilidade com Windows
+
+Para contornar limitações locais relacionadas ao Hadoop e ao `winutils.exe`, a exportação final é realizada com Pandas após o processamento analítico no Spark.
+
+---
+
+## 🧰 Tecnologias utilizadas
+
+`Python` `PySpark` `Apache Spark` `Spark SQL` `Pandas` `Regex` `Matplotlib` `Seaborn`
+
+---
+
+## 📁 Estrutura principal
+
+```text
+Mushmc-bedwars-etl/
+├── data/
+│   ├── raw/
+│   │   └── latest.log
+│   └── curated/
+│       ├── bedwars_analytics.csv
+│       └── dashboards/
+│           ├── 01_top_itens.png
+│           ├── 02_volume_eventos.png
+│           ├── 03_top_killers.png
+│           ├── 04_performance_pvp.png
+│           └── 05_camas_destruidas.png
+├── src/
+│   └── mushmc_bedwars_etl.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+## ▶️ Como executar
+
+### 1. Clone o repositório
+
+```bash
+git clone https://github.com/Daviramos7/Mushmc-bedwars-etl.git
+cd Mushmc-bedwars-etl
+```
+
+### 2. Crie um ambiente virtual
+
+```bash
+python -m venv .venv
+```
+
+No Windows:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+No Linux ou macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Instale as dependências
+
 ```bash
 pip install -r requirements.txt
 ```
 
-**3. Adicione seus dados:**
+### 4. Adicione o arquivo de entrada
 
-Coloque o seu arquivo `latest.log` original dentro da pasta `data/raw/` (crie as pastas, caso não existam).
+Coloque o arquivo `latest.log` em:
 
-**4. Configure seu Nickname *(Passo Crítico)*:**
+```text
+data/raw/latest.log
+```
 
-Abra o arquivo `src/mushmc_bedwars_etl.py` e, na linha 27, altere o valor da constante `JOGADOR_PRINCIPAL` para o seu nick exato do Minecraft:
+### 5. Configure o jogador principal
+
+No arquivo `src/mushmc_bedwars_etl.py`, altere a constante:
 
 ```python
 JOGADOR_PRINCIPAL = "seu_nick_aqui"
 ```
 
-**5. Execute o pipeline:**
-
-A partir da raiz do projeto, rode o comando:
+### 6. Execute o pipeline
 
 ```bash
 python src/mushmc_bedwars_etl.py
@@ -69,17 +195,35 @@ python src/mushmc_bedwars_etl.py
 
 ---
 
-## 📊 Outputs Gerados
+## 📦 Saídas geradas
 
-Após a execução bem-sucedida, a pasta `data/curated/` será criada com os seguintes artefatos:
+Após a execução, o pipeline produz:
 
-- **Tabela Estruturada:** `bedwars_analytics.csv` (pronta para consumo no Power BI/Excel).
-- **Dashboards Visuais:** Uma subpasta `dashboards/` contendo gráficos gerados e estilizados automaticamente pelo Matplotlib/Seaborn (Top Itens, Volume de Eventos, Top Killers, Performance PvP e Camas Destruídas).
+```text
+data/curated/
+├── bedwars_analytics.csv
+└── dashboards/
+    ├── 01_top_itens.png
+    ├── 02_volume_eventos.png
+    ├── 03_top_killers.png
+    ├── 04_performance_pvp.png
+    └── 05_camas_destruidas.png
+```
+
+O arquivo CSV pode ser utilizado em ferramentas como Power BI e Excel, enquanto os gráficos apresentam os principais resultados da execução.
+
+---
+
+## 🔐 Privacidade dos dados
+
+Logs podem conter nomes de jogadores e mensagens registradas durante as partidas. Antes de publicar novos arquivos, revise o conteúdo e evite disponibilizar informações que não sejam necessárias para demonstrar o pipeline.
 
 ---
 
 ## 📄 Licença
 
-Copyright © 2026 por Davi Ramos Ferreira. Todos os Direitos Reservados.
+Copyright © 2026 Davi Ramos Ferreira. Todos os direitos reservados.
 
-Desenvolvido com 💙 por **Davi Ramos Ferreira**
+---
+
+Desenvolvido por [Davi Ramos Ferreira](https://github.com/Daviramos7)
